@@ -12,7 +12,7 @@ This project is a statistical investigation to analyze and predict performance o
 * R programming
 * RMarkdown (RMD file)
 * Html report file is provided
-* data files(csv)
+* Data files (csv)
 
 # Introduction
 ## Why sports analytic?
