@@ -1,0 +1,1145 @@
+---
+title: "Sports Analytics for Predicting Baseball Teams and Players Performance"
+subtitle: "STAT 420: SUMMAR 2019 Team Project"
+author: "*Bahman Sheikh, NetID: bahmans2*\n
+
+         *Derek Zhang, NetID: derekz3*\n
+         
+         *Teju Kandula, NetID: tkandu2*"
+date: "July 18, 2019"
+output:
+  html_document: 
+    toc: yes
+  pdf_document: default
+urlcolor: cyan
+---
+```{r setup, echo = FALSE, message = FALSE, warning = FALSE}
+options(scipen = 1, digits = 4, width = 80, fig.align = "center")
+```
+# Introduction
+## Why sports analytic?
+
+Sports analytics is one of the most demanding topics in statistical modeling these days. Different sport teams invest lots of money on their team each year. They need to evaluate carefully how they choose and who they need in different posts, what playing strategies works better for their team, e.g. offensive, defensive in order to spend less but achieve more. The team managers use these statistical models to determine what characteristics make a college player become a robust professional player as well as many other crucial questions and decisions they need to make each season. Sports analytics are a combination of historical events, statistical analysis, simulations and modeling according to a teams individual players, teams tactics and teams opponents that when properly analyzed and applied in the team can provide a competitive advantage to a team or even the individual players. By analyzing this data, sports analytics inform players and coaches in order to improve and aid in decision making both during, prior and post game. According to Wikipedia the term "sports analytics" was spread in typical sports culture following the release of the 2011 movie Moneyball, the Oakland Athletics team of 2002 created history by winning 20 consecutive games between August 13 and September 20 2002. Much of the Oakland Athletics success in that season is credited to a graduate in Economics from Harvard University joining the team in 1999 and implementing analysis of baseball statistics to assess and purchase players. Sports analytics helps sport teams make  better, informed decisions which increases the performance of a sport team through better resource management. On top of that with sports analytics team managers can save or even makes money for the club by wisely investing on the players, finding unknown talent or find weaknesses in another player or a team. Hence these days sports analytics is rapidly becoming an essential element in the success of sports teams.
+
+## Statement of personal interest
+In this project we decided to enter the interesting and fast evolving field of data science.
+Our objective for this project is to statistically investigate the different critical features of baseball teams and players and find the significant ones to be able to predict the performance of a baseball team and/or performance of a player within a confidence level. Base on statistical data our main intention is to answer the following questions:
+
+- Predict a player's batting average, to assess the player quality for the post.
+-	Statistically predict how does a team make the playoffs?
+-	What evidences make a team more winner?
+-	How does a team score more runs?
+- Develope a predictive model.
+
+Some definitions: At-bats or batting average of a baseball player is the ratio of his number of hits to his number of opportunities-to-hit. Professional baseball players typically have at-bats average somewhere between 0.20 and 0.30. The player's at-bats in a given year can be predicted by his cumulative history of performance and it can be considered as a critical feature of a professional player.
+On the other hand, features such as the number of runs allowed, runs scored, on base percentage, and slugging percentage of a team are the main features to evaluate the performance of a baseball team in the season.
+According to the statistical analysis a baseball team required 90 to 100 wins in order to make it to the playoffs. A team typically needs to score 800 to 820 runs and allow 600-650 runs in order to make it to postseason.
+
+In this project we intend to utilize the knowledge we gained in the course to analyze and understand how a statistical method can be used to develop a predictive model in sports analytics. We will use **R** to first clean and prepare the data and study the distribution of each individual predictor and identify any possible outliers. Then we will investigate the significance of our predictors to predict wins of a baseball team and the batting average of a baseball player based on our predictors. We will use model selection techniques: BIC and AIC considering adjusted R squared and LOOCV RMSE measures for a multiple linear regression and/or polynomial regression. At the end we will investigate the different informative criteria for a baseball team to make to playoff, postseason or championship.
+
+## Description of the dataset
+For this project we consider two sets of data:
+
+**1)	MLB Statistics 1962-2012**
+In the early 2000s, Billy Beane and Paul DePodesta worked for the Oakland Athletics. With helps of statistical analysis they changed the game of baseball drastically. They realized that statistical data like on-base percentage and slugging percentage are very important when it came to predict scoring runs. They could predict performance of a player and recruit the player with a small budget before other team manager even think of the player. This data set contains some of the information that was available to Beane and DePodesta in the early 2000s. This dataset contains 1232 cases with 15 feature variables. The features are as follow:
+
+- Team
+- League
+- Year
+- RS Runs Scored
+- RA Runs Allowed
+- W Wins
+- OBP On-Base Percentage
+- SLG Slugging Percentage
+- BA Batting Average
+- Playoffs 
+- RankSeason
+- RankPlayoffs
+- G Games Played
+- OOBP Opponent On-Base Percentage
+- OSLG Opponent Slugging Percentage
+
+```{r}
+MLBData = read.csv("MLB.csv")
+head(MLBData)
+```
+
+
+**2)	Major league baseball player statistics data**
+
+This dataset contains 4535 cases with 50 feature variables of a group of individual baseball players during the years 1959-2004, it was obtained from the Lahman Baseball Database. 
+
+- YEAR 	 
+- YRINDEX	Year index (1959=1) 
+- PLAYERID Unique player ID 
+- NAMElast Last name 
+- NAMEfirst First name 
+- TEAM Team(s) played on that year 
+- LG League(s) played in that year 
+- LGCODE League code (0=AL,1=both, 2=NL) 
+- G	Games 
+- AB At bats (number of turns at bat)
+- R	Runs (player advances around all 4 bases and scores)
+- H	Hits (player hits a fair ball and reaches base safely without losing a runner already on base)
+- HR Home runs (balls that fly out of the ballpark and allow the batter to run all the way home)
+- RBI Runs batted in (number of runners who score on the basis of a player's hits)
+- TB Total bases (=H+DB+2TR+3HR) 
+- OB On base (=H+BB+HBP) 
+- PA Plate appearances (=H+BB+HBP+SF) 
+- DBL	Doubles (long hits that allow the batter to run all the way to second base)
+- TR Triples (very long hits that allow the batter to run all the way to third base)
+- SB Stolen bases (runner "steals" the next base by running to it when no one is looking)
+- CS Caught stealing (runner is tagged out with the ball while attempting to steal a base)
+- BB Bases on balls (player "walks" to first base if the pitcher throws 4 bad pitches) 
+- SO Struck out (player is out by swinging-and-missing and/or not-swinging-at-good-pitch 3 times)
+- IBB	Intentional bases on balls (pitcher deliberately throws 4 bad pitches to avoid risking a hit) 
+- HBP	Hit by pitch (player gets to go to first base on the basis of getting hit by pitch)
+- SH Sacrifices (player hits the ball and gets himself out but enables another runner to advance)
+- SF Sacrifice flies (sacrifices that are balls caught in the air in the outfield)
+- GIDP Grounded into double play (player hits a ball that gets himself out and also another runner)
+- AVG Batting average (=H/AB) 
+- OBP On base percentage (=OB/PA) 
+- SLG Slugging percentage (=TB/AB) 
+- AVGcum Cumulative batting average of the same player (in his career since 1959) 
+- OBPcum Cumulative on-base percentage 
+- SLGcum Cumulative slugging percentage 
+- ABcum Cumulative total at-bats 
+- Rcum Cumulative total runs 
+- Hcum Cumulative total hits 
+- HRcum Cumulative total home runs 
+- RBIcum Cumulative total runs batted in 
+- PAcum Cumulative total plate appearances 
+- OBcum Cumulative total of total-on-base 
+- TBcum Cumulative total of total-bases 
+- EXP Experience (# years after and including the first year in which CPA>50) 
+- PAYR Plate appearances per year of experience (since 1959) 
+- MLAVG	Major league batting average (same year, same set of players) 
+- MLOBP	Major league on base percentage 
+- MLSLG	Major league slugging average 
+- MLRAVG Major league average runs per plate appearance 
+- MLHRAVG	Major league average home runs per plate appearance 
+- MLRBIAVG Major league average RBI's per plate appearance
+
+```{r}
+LahmanData = read.csv("LahmanBaseballDatabase.csv")
+head(LahmanData)
+```
+# Methods
+## Creating Functions and loading necessary libraries
+
+In this section we are creating necessary functions to be used later in order to analyze the data. Also to be more organized all of the necessary libraries are gathered and loaded in this section.
+
+### Functions
+#### `diagnostics()` functions
+```{r}
+# make_conf_mat() function--------------------------
+### create function to generate the Confusion Matrix for a classifier
+make_conf_mat = function(predicted, actual) {
+  table(predicted = predicted, actual = actual)
+}
+
+# diagnostics() function--------------------------
+### create function to generate fitted vs. residuals plot and normal qq-plot
+diagnostics = function(model, pcol = "grey", lcol = "dodgerblue", alpha = 0.05, plotit = TRUE, testit = TRUE){
+  if(plotit) {
+    par(mfrow = c(1,2))
+    plot(fitted(model), resid(model), col = pcol, pch = 20,
+    xlab = "Fitted", ylab = "Residuals", main = "Fitted versus Residuals")
+    abline(h = 0, col = lcol, lwd = 2)
+    
+    qqnorm(resid(model), main = "Normal Q-Q Plot", col = pcol)
+    qqline(resid(model), col = lcol, lwd = 2)
+  }
+ if(testit) {
+   results = list(p_val = 0.0, decision = "reject")
+   results$p_val = shapiro.test(resid(model))$p.value
+   if(results$p_val < alpha){
+     results$decision = "Reject"
+   } else {
+     results$decision = "Fail to Reject."
+   }
+   return(results)
+ }
+}
+
+
+### `outlier_diagnostic()` function
+# get_influence() function-----------------------------------
+### create function to compute influence for all observations
+
+get_influence = function(model){
+  influence = cooks.distance(model)
+  return(influence)
+}
+
+
+# hi_influence_index() function-------------------------
+### create function to index high influence observations
+
+hi_influence_index = function(model){
+# compute influence for all observations
+  influence = get_influence(model)
+# index high influence observations
+  hi_influence_index = influence > 4 / length(influence)
+  return(hi_influence_index)
+}
+
+
+# outlier_count() function-------------------------------------
+### create function to count the number of outliers for a model
+
+outlier_count = function(hi_influence_index){
+# count number of high influence observations
+  outlier_count = sum(hi_influence_index)
+  return(outlier_count)
+}
+
+
+# outlier_remove() function------------------------------------------
+### create function to remove significant outliers from training data
+    ### remove observations on the basis of influence (cook's distance) only
+
+outlier_remove = function(hi_influence_index, train_set){
+# subset train data to exclude high influence observations
+  clean_set = train_set[-hi_influence_index, ]
+  return(clean_set)
+}
+
+
+# outlier_diagnostic() function----------------------------------------------------
+### create function to package the functionalities of outlier_count / outlier_remove
+### enriching/processing raw data
+
+outlier_diagnostic = function(model, train_set = NULL){
+  # refit branch
+  if(!is.null(train_set)){
+    # index high influence observations
+      hi_influence_index = hi_influence_index(model)
+    # count number of outlier
+      outlier_count = outlier_count(hi_influence_index)
+    # remove significant outliers from training data
+      clean_set = outlier_remove(hi_influence_index, train_set)
+    # format output
+      out = list(outlier_count = outlier_count, 
+                 clean_set = clean_set)
+      return(out)
+  } else {
+    # index high influence observations
+      hi_influence_index = hi_influence_index(model)
+    # count number of outlier
+      outlier_count = outlier_count(hi_influence_index)
+      # format output
+      out = list(outlier_count = outlier_count)
+      return(out)
+  }
+}
+```
+
+#### `goodness_of_fit()` functions
+```{r Model Fit Diagnostics}
+# get_loocv_rmse() function--------------
+### create function to compute loocv rmse
+
+get_loocv_rmse = function(model) {
+  sqrt(mean((resid(model) / (1 - hatvalues(model))) ^ 2))
+}
+
+
+# get_AIC() function----------------
+### create function to calculate AIC
+
+get_AIC= function(model) {
+  AIC(model)
+}
+
+
+# get_BIC() function----------------
+### create function to calculate BIC
+
+get_BIC= function(model) {
+  BIC(model)
+}
+
+
+# get_adj_r2() function--------------------------
+### create function to extract adjusted r-squared
+
+get_adj_r2 = function(model) {
+  summary(model)$adj.r.squared
+}
+
+
+# rmse() function-----------------------------------------------
+### create function to compute rmse given actual and fitted data
+
+rmse = function(y_actual, y_hat, n){
+  e = y_actual - y_hat
+  sse = sum(e ^ 2)
+  rmse = sqrt(sse / n)
+  return(rmse)
+}
+
+# get_test_rmse() function------------------
+### create function to compute test set rmse
+
+get_test_rmse = function(model, test_set, response) {
+# predict responses using the fitted model on test set predictor data
+  y_hat = as.vector(predict(model, test_set))
+# store actual responses in vector
+  y_actual = as.vector(test_set[, response])
+# extract number of observation
+  n = length(y_actual)
+# compute rmse
+  rmse(y_actual, y_hat, n)
+}
+
+
+# goodness_of_fit() function------------------------------
+### create function to compute all goodness of fit measures
+
+goodness_of_fit = function(model, test_set, response) {
+# get loocv rmse
+  loocv_rmse = get_loocv_rmse(model)
+# get AIC
+  AIC = get_AIC(model)
+# get BIC
+  BIC = get_BIC(model)
+# get adjusted r-squared
+  adj_r2 = get_adj_r2(model)
+# get test set rmse
+  test_rmse = get_test_rmse(model, test_set, response)
+# format output
+  out = list(loocv_rmse = loocv_rmse, AIC = AIC, BIC = BIC, adj_r2 = adj_r2, test_rmse = test_rmse)
+  return(out)
+}
+```
+
+#### `test_collinearity()` functions
+```{r}
+# test_decision_VIF() function------------------------------------------------------
+### create function to make a statistical decision on the basis of a given threshold
+
+test_decision_VIF = function(p, threshold){
+# decision branch
+if(isTRUE(p > threshold) == TRUE){
+# reject null
+  return(paste("Reject"))
+} else {
+# fail to reject null
+  return(paste("Fail to Reject"))}
+}
+
+
+# get_VIF() function------------------------------------------------------------------------
+### create function to compute the variance inflation factors for all est. beta coefficients
+
+get_VIF = function(model) {
+  vif(model)
+}
+
+
+# test_collinearity() function---------------------------------------------------------
+### create function to extract max VIF and determine whether collinearity is an issue
+### "Reject" = collinearity is an issue, "Fail to Reject" = collinearity is not an issue
+
+VIF_conventional_alpha = 5
+
+test_collinearity = function(model, alpha = VIF_conventional_alpha) {
+# compute VIFs
+  vif = get_VIF(model)
+# extract max VIF
+  max_vif = max(abs(vif))
+# determine whether collinearity is an issue
+  collinearity = test_decision_VIF(max_vif, alpha)
+# format output
+  out = list(max_vif = max_vif, collinearity = collinearity)
+  return(out)
+}
+
+
+```
+
+
+#### `resid_diagnostic()` function
+
+```{r Residual Diagnostics, warning = FALSE}
+
+# test_decision() function------------------------------------------------------
+### create function to make a statistical decision on the basis of a given alpha
+
+test_decision = function(p, alpha){
+# decision branch
+if(isTRUE(p < alpha) == TRUE){
+# reject null
+  return(paste("Reject"))
+} else {
+# fail to reject null
+  return(paste("Fail to Reject"))}
+}
+
+
+# test_normality() function----------------------------------------------------
+### create function to perform test for the normality of fitted model residuals
+### "Reject" = normality is suspect, "Fail to Reject" = normality is not suspect
+
+test_normality = function(model){
+  test = shapiro.test(resid(model))
+  p = test$p
+  return(p)
+}
+
+
+# test_constantvar() function---------------------------------------------------------
+### create function to perform test for the homoscedasticity of fitted model residuals
+### "Reject" = homoscedasticity is suspect, "Fail to Reject" = homoscedasticity is not suspect
+
+library(lmtest)
+test_constantvar = function(model){
+  test = bptest(model)
+  p = as.vector(test$p.value)
+  return(p)
+}
+
+
+# test_diagnostic() function---------------------------------------------------------
+### create function to package the functionality of test_normality / test_constantvar
+
+test_diagnostic = function(model, alpha){
+# perform Shapiro-Wilk normality test
+  p_norm = test_normality(model = model)
+# determine statisitical decision arrived at through S-W test
+  decision_norm = test_decision(p = p_norm, alpha = alpha)
+# perform Breusch-Pagan normality test
+  p_convar = test_constantvar(model = model)
+# determine statisitical decision arrived at through B-P test
+  decision_convar = test_decision(p = p_convar, alpha = alpha)
+# format output
+  out = list(p_norm   = p_norm  , decision_norm   = decision_norm,
+             p_convar = p_convar, decision_convar = decision_convar)
+  return(out)
+}
+
+
+# resid_diagnostic() function---------------------------------------------------------
+### create function to package the functionality of  plot_qq/ plot_fvr / test_diagnostic
+
+resid_conventional_alpha = 0.05
+
+resid_diagnostic = function(model, pcol = "slategrey", lcol = "red", alpha = resid_conventional_alpha, 
+                           plot_qq = FALSE, plot_fvr = FALSE, testit = FALSE){
+  # store plot_qq output
+    qq = function(){plot_qq(model, pcol, lcol)}
+  # store plot_fvr output
+    fvr = function(){plot_fvr(model, pcol, lcol)}
+    
+  # output scheme
+  if(testit) {
+    return(test_diagnostic(model, alpha))
+  }
+  if(plot_qq) {
+    qq()
+  }
+  if(plot_fvr) {
+    fvr()
+  }
+}  
+```
+
+### Libraries
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+library(faraway)
+library(lmtest)
+library(ggplot2)
+library(boot)
+library(readr)
+```
+
+## Exploring the datasets
+
+**1)	MLB Statistics 1962-2012**
+
+- Some grouping of the dataset
+
+- Teams made to playoff
+```{r}
+MLBData$RunDiff = MLBData$RS - MLBData$RA
+playOff     = MLBData[which(!is.na(MLBData$RankPlayoff)),]
+notPlayOff  = MLBData[which(is.na(MLBData$RankPlayoff)),]
+```
+
+
+As mentioned the MLB dataset has 15 feature varables in our project to create a predictive model we considered 9 variables as the following:
+
+To get insgight about the MLB dataset and its feature variables lets first take a look to the distribution of the each variables:
+```{r fig.height=30, fig.width=30}
+pairs(MLBData, col="blue")
+```
+- As it can be seen RS, RA, W, OBP, SLG, BA, OOBP and OSLG seem to have a kind of linear relashinship with each other. We will see these feature variables are the most significants for our predictive model. lets also check the variation of some most important predictors:
+
+```{r fig.height=10, fig.width=15}
+par(mfrow = c(1,2))
+boxplot(MLBData[c(4, 5, 6)], data = mpg,
+pch = 20,
+cex = 2,
+outline = TRUE,
+col = "pink",
+border = "purple")
+boxplot(MLBData[c(7, 8, 9, 14, 15)], data = mpg,
+pch = 20,
+cex = 2,
+outline = TRUE,
+col = "pink",
+border = "purple")
+```
+
+- To predict win or playoff situation of a team four predictors are at most importance which are RA, RS, SLG and OBP lets take a look at their distribution:
+
+```{r fig.height=10, fig.width=10}
+
+par(mfrow = c(2,2)) 
+
+hist(MLBData$RA,
+xlab = "Runs Allowed (RA)",
+breaks = 30,
+col = "darkgreen",
+main = "",
+prob = TRUE,
+border = "darkorange")
+axis(side=1, at=seq(400,1200, 100))
+axis(side=2, at=seq(0.000,0005., 0.001))
+abline(v = mean(MLBData$RA), lty = 2 ,lwd = 4,col = "red")
+x= MLBData$RA
+curve(dnorm(x, mean = mean(MLBData$RA), sd = sd(MLBData$RA)), col = "red", add = TRUE, lwd = 3)
+grid(lwd=1)
+
+hist(MLBData$RS,
+xlab = "Runs Scored (RS)",
+breaks = 30,
+col = "purple",
+main = "",
+prob = TRUE,
+border = "darkorange")
+abline(v = mean(MLBData$RS), lty = 2 ,lwd = 4,col = "red")
+axis(side=1, at=seq(400,1200, 100))
+axis(side=2, at=seq(0.000,0005., 0.001))
+x= MLBData$RS
+curve(dnorm(x, mean = mean(MLBData$RS), sd = sd(MLBData$RS)), col = "red", add = TRUE, lwd = 3)
+grid(lwd=1)
+
+hist(MLBData$OBP,
+xlab = "On Base Percentage (OBP)",
+breaks = 30,
+col = "darkblue",
+main = "",
+prob = TRUE,
+border = "darkorange")
+abline(v = mean(MLBData$OBP), lty = 2 ,lwd = 4,col = "red")
+axis(side=1, at=seq(0.24,0.4, 0.04))
+axis(side=2, at=seq(0.000,30., 5))
+x= MLBData$OBP
+curve(dnorm(x, mean = mean(MLBData$OBP), sd = sd(MLBData$OBP)), col = "red", add = TRUE, lwd = 3)
+grid(lwd=1)
+
+hist(MLBData$SLG,
+xlab = "Slugging Percentage (SLG)",
+breaks = 30,
+col = "dodgerblue",
+main = "",
+prob = TRUE,
+border = "darkorange")
+axis(side=2, at=seq(0.000,14., 2))
+abline(v = mean(MLBData$SLG), lty = 2 ,lwd = 4,col = "red")
+x= MLBData$SLG
+curve(dnorm(x, mean = mean(MLBData$SLG), sd = sd(MLBData$SLG)), col = "red", add = TRUE, lwd = 3)
+grid(lwd=1)
+
+```
+
+- As it can be seen all of the are approximately has a normal distributtion. RA and RS seems to be skewed to the right a little bit. 
+
+- Although according to a baseball analyzer a team required at least 99 wins in order to make to the playoff, we checked that here and we found that instead of 99 wins it seems Slugging Percentage (SLG) is a better criteria with less error so we would say if a team has a 99 SLG and above it will difnietlt make to the play off.
+
+```{r fig.height=15, fig.width=15}
+par(mfrow = c(3,2)) 
+plot(RS ~ W, data = playOff, xlab = "Team Wins", ylab = "Runs scored (RS)", main = "Team wins VS. Runs Scored", pch = 17, cex = 2, xlim = c(min(playOff$W, notPlayOff$W), max(playOff$W, notPlayOff$W)), ylim = c(min(playOff$RS, notPlayOff$RA), max(playOff$RS, notPlayOff$RS)), col = "darkred")
+points(RS ~ W, data = notPlayOff, col='blue', pch = 2, cex = 2) 
+legend("topleft", c("play off", "not play off"), pch = c(17, 2), col = c("darkred", "blue"))
+abline(v = 99, lty = 2 ,lwd = 4,col = "red")
+
+plot(RA ~ W, data = playOff, xlab = "Team Wins", ylab = "Runs allowed (RA)", main = "Team wins VS. Runs Allowed", pch = 16, cex = 2, xlim = c(min(playOff$W, notPlayOff$W), max(playOff$W, notPlayOff$W)), ylim = c(min(playOff$RA, notPlayOff$RA), max(playOff$RA, notPlayOff$RA)), col = "darkred")
+points(RA ~ W, data = notPlayOff, col='blue', pch = 1, cex = 2) 
+legend("topleft", c("play off", "not play off"), pch = c(16, 1), col = c("darkred", "blue"))
+abline(v = 99, lty = 2 ,lwd = 4,col = "red")
+
+plot(OBP ~ W, data = playOff, xlab = "Team Wins", ylab = "On Base Percentage (OBP)", main = "Team wins VS. On Base Percentage", pch = 18, cex = 2, xlim = c(min(playOff$W, notPlayOff$W), max(playOff$W, notPlayOff$W)), ylim = c(min(playOff$OBP, notPlayOff$OBP), max(playOff$OBP, notPlayOff$OBP)), col = "darkred")
+points(OBP ~ W, data = notPlayOff, col='blue', pch = 3, cex = 2) 
+legend("topleft", c("play off", "not play off"), pch = c(18, 3), col = c("darkred", "blue"))
+abline(v = 99, lty = 2 ,lwd = 4,col = "red")
+
+plot(SLG ~ W, data = playOff, xlab = "Team Wins", ylab = "Slugging Percentage (SLG)", main = "Team wins VS. Slugging Percentage", pch = 19, cex = 2, xlim = c(min(playOff$W, notPlayOff$W), max(playOff$W, notPlayOff$W)), ylim = c(min(playOff$SLG, notPlayOff$SLG), max(playOff$SLG, notPlayOff$SLG)), col = "darkred")
+points(SLG ~ W, data = notPlayOff, col='blue', pch = 4, cex = 2) 
+legend("topleft", c("play off", "not play off"), pch = c(19, 4), col = c("darkred", "blue"))
+abline(v = 99, lty = 2 ,lwd = 4,col = "red")
+
+plot(BA ~ W, data = playOff, xlab = "Team Wins", ylab = "Batting Average (BA)", main = "Team wins VS. Batting Average", pch = 20, cex = 2, xlim = c(min(playOff$W, notPlayOff$W), max(playOff$W, notPlayOff$W)), ylim = c(min(playOff$BA, notPlayOff$BA), max(playOff$BA, notPlayOff$BA)), col = "darkred")
+points(BA ~ W, data = notPlayOff, col='blue', pch = 5, cex = 2) 
+legend("topleft", c("play off", "not play off"), pch = c(20, 5), col = c("darkred", "blue"))
+abline(v = 99, lty = 2 ,lwd = 4,col = "red")
+
+```
+
+- Also instead of the orignial feature variables RA and RS if we consider the difference between them (RunDiff = RA - RS) we can predict team wins much better as a linear predictor so we added this feature to the dataset.
+
+```{r}
+model = lm(RunDiff ~ W, data = MLBData)
+plot(RunDiff ~ W, data = playOff, xlab = "Team Wins", ylab = "RS-RA", main = "Team wins VS. Difference between RS and RA", pch = 20, cex = 2, xlim = c(min(playOff$W, notPlayOff$W), max(playOff$W, notPlayOff$W)), ylim = c(min(playOff$RunDiff, notPlayOff$RunDiff), max(playOff$RunDiff, notPlayOff$RunDiff)), col = "darkred")
+points(RunDiff ~ W, data = notPlayOff, col='blue', pch = 5, cex = 2) 
+legend("topleft", c("play off", "not play off", "fitted linear line"), pch = c(20, 5), col = c("darkred", "blue", "orange"))
+abline(v = 99, lty = 2 ,lwd = 4,col = "red")
+abline(model, lty = 1 ,lwd = 4, col = "orange")
+grid(lwd=1)
+```
+
+**2)	Major league baseball player statistics data**
+
+Clean Up Data
+```{r}
+Baseball_stats = LahmanData
+# Remove averages
+Baseball_stats = subset(Baseball_stats, select = -c(37: ncol(Baseball_stats)))
+
+# Remove unnecessary and duplicate data
+Baseball_stats = subset(Baseball_stats, select = -c(YEAR, PLAYERID, NAMElast, NAMEfirst, LG))
+
+# Coerce Catigorical Variables into factors
+Baseball_stats$YRINDEX = as.factor(Baseball_stats$YRINDEX)
+Baseball_stats$TEAM = as.factor(Baseball_stats$TEAM)
+Baseball_stats$LGCODE = as.factor(Baseball_stats$LGCODE)
+```
+
+**Setting Up Train/Test Data**
+```{r}
+set.seed(420)
+train_index  = sample(nrow(Baseball_stats), size = trunc(0.80 * nrow(Baseball_stats)))
+train_set = Baseball_stats[train_index, ]
+test_set = Baseball_stats[-train_index, ]
+
+```
+
+- Predictor Variable Distributions:
+
+```{r, fig.height=63, fig.width=30}
+
+### plot_dist() function-----------------------------------------
+    # plot histogram of specified predictor variable distribution
+
+plot_dist = function(variable, variable_id, norm_dist = FALSE){
+  par(mar = c(17, 9, 10, 5), mgp = c(6, 1, 0))
+  # plot histogram of variable distribution
+  hist(variable, freq = FALSE,
+       xlab = "Variable Quantiles",
+       main = variable_id, cex.main = 4,
+       font = 1, family = "sans", cex.lab = 3.3,
+       col = "slategrey", border = "white", cex.axis = 2.8)
+  # only add true distribution for data belonging to a normal distribution
+  if(isTRUE(norm_dist) == TRUE){
+        # plot true normal distribution
+        curve(dnorm(x, mean = mean(variable), sd = sd(variable)),
+        col = "red", add = TRUE, lwd = 5)
+        # plot mean of the normal distribution
+        abline(v = mean(variable), lty = 2, lwd = 5, col = "paleturquoise3")
+  }
+}
+
+
+par(mfrow = c(6, 3))
+    plot_dist(Baseball_stats$G, "G - [Games]")
+    plot_dist(Baseball_stats$R, "R - [Runs]", norm_dist = TRUE)
+    plot_dist(Baseball_stats$HR, "HR - [Home runs]")
+    plot_dist(Baseball_stats$RBI, "RBI - [Runs batted in]", norm_dist = TRUE)
+    plot_dist(Baseball_stats$DBL, "DBL - [Doubles]", norm_dist = TRUE)
+    plot_dist(Baseball_stats$TR, "TR - [Triples]")
+    plot_dist(Baseball_stats$SB, "SB - [Stolen Bases]")
+    plot_dist(Baseball_stats$CS, "CS - [Caught stealing]")
+    plot_dist(Baseball_stats$SO, "SO - [Struck out]", norm_dist = TRUE)
+    plot_dist(Baseball_stats$IBB, "IBB - [Intentional bases on balls]")
+    plot_dist(Baseball_stats$SH, "SH - [Sacrifices]")
+    plot_dist(Baseball_stats$SF, "SF - [Sacrifice flies]")
+    plot_dist(Baseball_stats$GIDP, "GIDP - [Grounded into double play]", norm_dist = TRUE)
+    plot_dist(Baseball_stats$AVG, "AVG - [Batting Average]", norm_dist = TRUE)
+    plot_dist(Baseball_stats$OBP, "OBP - [On base percentage]", norm_dist = TRUE)
+    plot_dist(Baseball_stats$SLG, "SLG - [Slugging percentage]", norm_dist = TRUE)
+    plot_dist(Baseball_stats$EXP, "EXP - [Experience]")
+    plot_dist(Baseball_stats$PAYR, "PAYR - [Plate appearances per year]", norm_dist = TRUE)
+    
+```
+
+```{r, fig.height=63, fig.width=30}
+# scatterplot() function-----------------------------------------------------------
+### create function to generate scatterplot of a predictor against the response
+
+scatterplot = function(variable, variable_id, title){
+  par(mar = c(17, 9, 10, 5), mgp = c(6, 1, 0))
+  # add scatterplot
+  plot(SLG ~ variable, data = Baseball_stats,
+       col = "slategrey", pch = 16, cex = 0.9,
+       main = title, xlab = variable_id, 
+       ylab = "SLG - [Slugging Percentage]",
+       cex.main = 4, cex.lab = 3.3, cex.axis = 2.8)
+}
+
+par(mfrow = c(6, 3))
+    scatterplot(Baseball_stats$G, "G - [Games]", "SLG vs. G")
+    scatterplot(Baseball_stats$R, "R - [Runs]", "SLG vs. R")
+    scatterplot(Baseball_stats$HR, "HR - [Home runs]", "SLG vs. HR")
+    scatterplot(Baseball_stats$RBI, "RBI - [Runs batted in]", "SLG vs. RBI")
+    scatterplot(Baseball_stats$DBL, "DBL - [Doubles]", "SLG vs. DBL")
+    scatterplot(Baseball_stats$TR, "TR - [Triples]", "SLG vs. TR")
+    scatterplot(Baseball_stats$SB, "SB - [Stolen Bases]", "SLG vs. SB")
+    scatterplot(Baseball_stats$CS, "CS - [Caught stealing]", "SLG vs. CS")
+    scatterplot(Baseball_stats$SO, "SO - [Struck out]", "SLG vs. G")
+    scatterplot(Baseball_stats$IBB, "IBB - [Intentional bases on balls]", "SLG vs. SO")
+    scatterplot(Baseball_stats$SH, "SH - [Sacrifices]", "SLG vs. SH")
+    scatterplot(Baseball_stats$SF, "SF - [Sacrifice flies]", "SLG vs. SF")
+    scatterplot(Baseball_stats$GIDP, "GIDP - [Grounded into double play]", "SLG vs. GIDP")
+    scatterplot(Baseball_stats$AVG, "AVG - [Batting Average]", "SLG vs. AVG")
+    scatterplot(Baseball_stats$OBP, "OBP - [On base percentage]", "SLG vs. OBP")
+    scatterplot(Baseball_stats$SLG, "SLG - [Slugging percentage]", "SLG vs. SLG")
+    scatterplot(Baseball_stats$EXP, "EXP - [Experience]", "SLG vs. EXP")
+    scatterplot(Baseball_stats$PAYR, "PAYR - [Plate appearances per year]", "SLG vs. PAYR")
+    
+```
+
+# Building Models
+
+
+## Classification Model to predict teams make to the playoff
+
+- In this section we try to build a classifier to predict a team could make to play-off or not. 
+
+First we divide the data to train and test data:
+
+```{r}
+#Test-Train Split
+set.seed(42)
+MLBData_B = MLBData[-c(1, 6, 11, 12, 13, 14, 15)]
+# spam_idx = sample(nrow(spam), round(nrow(spam) / 2))
+spam_idx = sample(nrow(MLBData_B), 800)
+MLBData_trn = MLBData_B[spam_idx, ]
+MLBData_tst = MLBData_B[-spam_idx, ]
+```
+
+We considered four different models to build our classifier as:
+
+1) An additive model with just four predictors: RS + RA + OBP + SLG
+
+```{r}
+model_playoff_additive_small = glm(Playoffs ~ RS + RA + OBP + SLG, data = MLBData_trn, family = "binomial")
+```
+
+Then we calculate the variance inflation factor (VIF) for each of the predictors:
+
+```{r}
+vif(model_playoff_additive_small)
+```
+
+all of these are greater then 5 but we still decided to keep them as is.
+
+2) An additive model with all predictors except Team, RankSeason, RankPlayoffs, G because they are not obviously relevent, for example parameter G shows the number of games a team played so higher value for G means more games played so it means that the team made it to playoff.
+```{r}
+
+model_playoff_additive_All   = glm(Playoffs ~ . , data = MLBData_trn, family = "binomial", maxit = 2000)
+```
+
+Then we calculate the variance inflation factor (VIF) for each of the predictors:
+
+```{r, message = FALSE, warning=FALSE}
+vif(model_playoff_additive_All )
+```
+
+- So as expected RunDiff has a very large VIF because it is equal to RS - RA. As we noticed that RunDiff can peredict the model better than RA and RS as shown in the Exploring the datasets section. So we decided to omit RS and RA:
+
+```{r}
+MLBData_trn_NO_RA_RS = MLBData_trn[-c(3, 4)]
+model_playoff_additive_All   = glm(Playoffs ~ ., data = MLBData_trn_NO_RA_RS, family = "binomial", maxit = 2000)
+```
+```{r, message = FALSE, warning=FALSE}
+vif(model_playoff_additive_All )
+```
+- As it can be seen VIF decreased drastically.
+
+3,4) We considered a model chosen via backwards selection using AIC. we used a model that considers all available predictors as well as their two-way interactions for the start of the search.
+
+```{r, message = FALSE, warning=FALSE} 
+model_playoff_interactive_all = glm(Playoffs ~ .:., data = MLBData_trn_NO_RA_RS, family = "binomial", maxit = 200)
+model_playoff_AIC = step(model_playoff_interactive_all, direction = "backward", method = "AIC", trace = 0, maxit = 200)
+```
+
+-For each mode we obtained a 5-fold cross-validated misclassification rate using the model as a classifier that seeks to minimize the misclassification rate. 
+
+```{r, message = FALSE, warning=FALSE}
+set.seed(12)
+cv.glm(MLBData_trn, model_playoff_additive_small, K = 5)$delta[1]
+cv.glm(MLBData_trn, model_playoff_additive_All, K = 5)$delta[1]
+cv.glm(MLBData_trn, model_playoff_interactive_all, K = 5)$delta[1]
+cv.glm(MLBData_trn, model_playoff_AIC, K = 5)$delta[1]
+```
+
+- The best model on the training data was the model chose by AIC lets calculate the misclassification rate on test data:
+
+```{r, message = FALSE, warning=FALSE}
+# test misclassification rate
+(mis1 = mean(ifelse(predict(model_playoff_additive_small, MLBData_tst) > 0, 1, 0) != MLBData_tst$Playoffs))
+(mis2 = mean(ifelse(predict(model_playoff_additive_All, MLBData_tst) > 0, 1, 0) != MLBData_tst$Playoffs))
+(mis3 = mean(ifelse(predict(model_playoff_interactive_all, MLBData_tst) > 0, 1, 0) != MLBData_tst$Playoffs))
+(mis4 = mean(ifelse(predict(model_playoff_AIC, MLBData_tst) > 0, 1, 0) != MLBData_tst$Playoffs))
+```
+
+On the test data also AIC model did a good job with test misclassification rate of `r mis4` 
+
+Also we calculate the Sensitivity and Specificity of each model:
+
+```{r}
+#models Sensitivity
+#print(c("sensitivity", "specificity"))
+conf_mat = make_conf_mat(predicted = ifelse(predict(model_playoff_additive_small, MLBData_tst) > 0, 1, 0), actual = MLBData_tst$Playoffs)
+model1 = (c(conf_mat[2, 2] / sum(conf_mat[, 2]), conf_mat[1, 1] / sum(conf_mat[, 1])))
+conf_mat = make_conf_mat(predicted = ifelse(predict(model_playoff_additive_All, MLBData_tst) > 0, 1, 0), actual = MLBData_tst$Playoffs)
+model2 = (c(conf_mat[2, 2] / sum(conf_mat[, 2]), conf_mat[1, 1] / sum(conf_mat[, 1])))
+conf_mat = make_conf_mat(predicted = ifelse(predict(model_playoff_interactive_all, MLBData_tst) > 0, 1, 0), actual = MLBData_tst$Playoffs)
+model3 = (c(conf_mat[2, 2] / sum(conf_mat[, 2]), conf_mat[1, 1] / sum(conf_mat[, 1])))
+conf_mat = make_conf_mat(predicted = ifelse(predict(model_playoff_AIC, MLBData_tst) > 0, 1, 0), actual = MLBData_tst$Playoffs)
+model4 = (c(conf_mat[2, 2] / sum(conf_mat[, 2]), conf_mat[1, 1] / sum(conf_mat[, 1])))
+```
+| Model      | sensitivity  | specificity  | Misclassification rate |
+|------------|:------------:|:------------:|:----------------------:|
+| Model 1    | `r model1[1]`| `r model1[2]`|         `r mis1`       |
+| Model 2    | `r model2[1]`| `r model2[2]`|         `r mis2`       |
+| Model 3    | `r model3[1]`| `r model3[2]`|         `r mis3`       |
+| Model 4    | `r model4[1]`| `r model4[2]`|         `r mis4`       |
+
+
+So the model 4 (AIC model) is the best model, the parameters are as the following:
+
+```{r}
+summary(model_playoff_AIC)
+```
+
+- It seems SLG predictor is not significant but as the test misclassification rate is low for the model we decided to keep the model. Actually many of the predictors are one way or another are correlated to each other. However the test misclassification rate of model is pretty low: `r mis4` 
+
+
+
+## Model to predict the runs scored
+
+- Based on the previous analysis we reach the conclusion that the most probabely OBP, SLG, BA and RunDiff can be the best predictors for the response RS to predict the runs scored by a team so lets give this idea a try:
+
+```{r}
+model_RS = lm(RS ~ (OBP + SLG + RunDiff + BA)^2, data = MLBData)
+summary(model_RS)
+```
+
+- Again it seems there is a collinearity problem between the predictors:
+
+```{r}
+vif(model_RS)
+```
+
+- So it seems two way interaction is not necessary lets omit it:
+
+```{r}
+model_RS = lm(RS ~ (OBP + SLG + RunDiff + BA + Year), data = MLBData)
+summary(model_RS)
+```
+
+- lets also remove any potential outliars from the data:
+
+**Removing Outliers**
+```{r}
+lev = hatvalues(model_RS )
+high_lev = which(lev > 2 * mean(lev))
+influential = which(cooks.distance(model_RS ) > 4 / length(cooks.distance(model_RS)))
+remove = c(high_lev, influential)
+adj_data = MLBData[-unique(remove),]
+
+model_RS = lm(RS ~ (OBP + SLG + RunDiff + BA + Year), data = adj_data)
+summary(model_RS)
+```
+```{r}
+vif(model_RS)
+```
+
+- Great model, lets check the assumptions:
+
+```{r}
+#Model to predict Runs Scored
+diagnostics(model_RS, testit = FALSE, pcol = "red", lcol = "black")
+
+```
+
+- Perfect!
+
+```{r}
+test_diagnostic(model_RS, alpha = 0.01)
+```
+
+- So both normality and equal variance assumptions are satisfied and the Multiple R-squared of the model is 0.944
+
+## Model to predict the runs allowed
+
+- Lets add two new predictors to the previous model and do a similar steps to see we can predict run allowed (RA) of a team two new predictors are OOBP and OSLG:
+
+```{r}
+model_RA = lm(RA ~ (OBP + SLG + OOBP + OSLG + RunDiff + BA + Year), data = MLBData)
+model_RA = step(model_RA, direction = "backward", k = log(length(resid(model_RA))), trace = 0)
+summary(model_RA)
+```
+**Removing Outliers**
+```{r}
+lev = hatvalues(model_RA )
+high_lev = which(lev > 2 * mean(lev))
+influential = which(cooks.distance(model_RA ) > 4 / length(cooks.distance(model_RA)))
+remove = c(high_lev, influential)
+adj_data = MLBData[-unique(remove),]
+
+model_RA = lm(RA ~ (OBP + SLG + OOBP + OSLG + RunDiff + BA + Year), data = adj_data)
+summary(model_RA)
+```
+
+
+```{r}
+vif(model_RA)
+```
+
+```{r}
+#Model to predict Runs Allowed
+diagnostics(model_RA, testit = FALSE, pcol = "blue", lcol = "black")
+```
+
+```{r}
+test_diagnostic(model_RA, alpha = 0.01)
+```
+
+- So it seems we can perfectly predict runs scored and runs allowed. Lets try to predict win rate of a team.
+
+
+## Model to predict wins
+
+- Lets try to predict win rate of a team, this time lets try BIC to find a model:
+
+```{r}
+model_Win = lm(W ~ (OBP + SLG + OOBP + OSLG + RunDiff + BA + Year)^2, data = MLBData)
+model_Win = step(model_Win, direction = "backward", k = log(length(resid(model_Win))), trace = 0)
+summary(model_Win)
+```
+
+**Removing Outliers**
+```{r}
+lev = hatvalues(model_Win )
+high_lev = which(lev > 2 * mean(lev))
+influential = which(cooks.distance(model_Win ) > 4 / length(cooks.distance(model_Win)))
+remove = c(high_lev, influential)
+adj_data = MLBData[-unique(remove),]
+
+model_Win = lm(W ~ (OBP + SLG + OOBP + OSLG + RunDiff + BA + Year)^2, data = adj_data)
+model_Win = step(model_Win, direction = "backward", k = log(length(resid(model_Win))), trace = 0)
+summary(model_Win)
+```
+
+```{r}
+vif(model_Win)
+```
+
+-Perfect very small model but having high R-squared: 0.904. Although we considered two ways interactions but BIC rejected all of them.
+
+```{r}
+#Model to predict Team Wins
+diagnostics(model_Win, testit = FALSE, pcol = "darkgreen", lcol = "black")
+```
+
+```{r}
+test_diagnostic(model_Win, alpha = 0.01)
+```
+
+## Model to predict the batting average
+
+- Removing Outliers
+```{r}
+add_model = lm(AVG ~ . , data = train_set)
+
+lev = hatvalues(add_model)
+high_lev = which(lev > 2 * mean(lev))
+influential = which(cooks.distance(add_model) > 4 / length(cooks.distance(add_model)))
+remove = c(high_lev, influential)
+adj_data = Baseball_stats[-unique(remove),]
+
+adj_model = lm(AVG ~ ., data = adj_data)
+```
+
+- Creating The Initial Models
+```{r}
+# Backward AIC
+add_model_back_AIC = step(adj_model, direction = "backward", trace = 0)
+
+# Backward BIC
+add_model_back_BIC = step(adj_model, direction = "backward", k = log(length(resid(add_model))), trace = 0)
+```
+
+**Adjusting BIC model**
+```{r}
+# Adjusting dataframe to only show variables chosen through backwards BIC
+variables = tail(names(coef(add_model_back_BIC)), -1)
+back_bic_data = subset(train_set, select = variables)
+
+round(cor(back_bic_data), 2)
+
+#AB seems to have a relatively high correlation with the other variables, especially PA so we're going to check the correlation with other variables
+check_model = lm(AB ~ ., data = back_bic_data)
+summary(check_model)$r.squared
+
+#AB's correlation with other variables is very high, so we can say that the other predictors can explain the variablity in AB and we can remove it from the model
+adj_bic_mod = lm(AVG ~ AB + H + HR + TB + OB + DBL + SO + SH + GIDP + OBP + SLG, data = adj_data)
+
+#So we see max collinearity went down alot, but the VIFs are still to high so we will remove other variables that also has high correlations in the correlation matrix and check how the overall VIFs change
+
+adj_bic_mod = lm(AVG ~ H + HR + OB + DBL + SO + SH + GIDP , data = adj_data)
+
+test_collinearity(adj_bic_mod)
+
+# So collinearity is now good, but we removed alot of variables so have to check if the goodness of fit still works
+goodness_of_fit(adj_bic_mod, test_set = test_set, response = "AVG")
+
+# Now that collinearity is good the R^2 value went down and the RMSE went up so we have to fix that. Maybe variable transformation will help
+variables = tail(names(coef(adj_bic_mod)), -1)
+
+back_bic_data = subset(train_set, select = variables)
+back_bic_data$AVG = train_set$AVG
+
+```
+- So finally after trying different scenarios let's see the final model predictors and their distributions:
+
+```{r fig.height=15, fig.width=15}
+pairs(back_bic_data, col = "darkblue")
+```
+
+**Guess and Check Adjusting Model**
+```{r}
+adj_bic_mod = lm(AVG ~ H + HR + DBL + OB + PA, data = adj_data)
+
+summary(adj_bic_mod)
+
+test_collinearity(adj_bic_mod)
+goodness_of_fit(adj_bic_mod, test_set = test_set, response = "AVG")
+```
+
+```{r}
+#Model to predict batting average
+diagnostics(adj_bic_mod, testit = FALSE, pcol = "purple", lcol = "black")
+```
+```{r}
+vif(adj_bic_mod)
+```
+
+- As it can be seen the Residuals versus Fitted plot has a kind of strange shape, however, the other assumptions seem to be satisfied and also VIF of the parameters are low (maximum = 4.578) and R-squared of the model is very high: 0.98 so we think the model is acceptable.
+
+# Results and Conclusion
+
+In this project we used statistical analysis we have learned in STAT-420 course to perform a sports analytics on baseball data in order to mainly answer the following questions:
+
+- Statistically predict how does a team make the playoffs?
+
+we answered this question by just exploring the data. We found a better criteria to predict whether a team made to the playoffs or not. Based on our results team with 99 wins or higher would make to playoffs with a high chance. Also instead of using the original feature variables: RS and RA if you consider the difference between this two variables (RS-RA) we can find a linear relationship with tem wins (see below charts).
+
+```{r fig.height=5, fig.width=15}
+par(mfrow = c(1,2)) 
+plot(RS ~ W, data = playOff, xlab = "Team Wins", ylab = "Runs scored (RS)", main = "Team wins VS. Runs Scored", pch = 17, cex = 2, xlim = c(min(playOff$W, notPlayOff$W), max(playOff$W, notPlayOff$W)), ylim = c(min(playOff$RS, notPlayOff$RA), max(playOff$RS, notPlayOff$RS)), col = "darkred")
+points(RS ~ W, data = notPlayOff, col='blue', pch = 2, cex = 2) 
+legend("topleft", c("play off", "not play off"), pch = c(17, 2), col = c("darkred", "blue"))
+abline(v = 99, lty = 2 ,lwd = 4,col = "red")
+
+plot(SLG ~ W, data = playOff, xlab = "Team Wins", ylab = "Slugging Percentage (SLG)", main = "Team wins VS. Slugging Percentage", pch = 19, cex = 2, xlim = c(min(playOff$W, notPlayOff$W), max(playOff$W, notPlayOff$W)), ylim = c(min(playOff$SLG, notPlayOff$SLG), max(playOff$SLG, notPlayOff$SLG)), col = "darkred")
+points(SLG ~ W, data = notPlayOff, col='blue', pch = 4, cex = 2) 
+legend("topleft", c("play off", "not play off"), pch = c(19, 4), col = c("darkred", "blue"))
+abline(v = 99, lty = 2 ,lwd = 4,col = "red")
+```
+
+```{r}
+model = lm(RunDiff ~ W, data = MLBData)
+plot(RunDiff ~ W, data = playOff, xlab = "Team Wins", ylab = "RS-RA", main = "Team wins VS. Difference between RS and RA", pch = 20, cex = 2, xlim = c(min(playOff$W, notPlayOff$W), max(playOff$W, notPlayOff$W)), ylim = c(min(playOff$RunDiff, notPlayOff$RunDiff), max(playOff$RunDiff, notPlayOff$RunDiff)), col = "darkred")
+points(RunDiff ~ W, data = notPlayOff, col='blue', pch = 5, cex = 2) 
+legend("topleft", c("play off", "not play off", "fitted linear line"), pch = c(20, 5), col = c("darkred", "blue", "orange"))
+abline(v = 99, lty = 2 ,lwd = 4,col = "red")
+abline(model, lty = 1 ,lwd = 4, col = "orange")
+grid(lwd=1)
+```
+
+- Develope a predictive model.
+
+We developed a classifier to predict whether a team made to the playoffs or not. After trying different predictors and different models we come up with a logistic model with the following predictors: Year + OBP + SLG + BA + RunDiff + OBP:SLG + SLG:BA + SLG:RunDiff
+
+Our final best classifier has sensitivity, specificity and misclassification rate as follow, you may see the other models we built in the building the classifier section:
+
+| Model      | Sensitivity  | Specificity  | Misclassification rate |
+|------------|:------------:|:------------:|:----------------------:|
+| Model 4    | `r model4[1]`| `r model4[2]`|         `r mis4`       |
+
+
+- What evidences make a team more winner? How does a team score more runs?
+- Predict a player's batting average, to assess the player quality for the post.
+
+To predict team wins, runs scored, run allowed, and player's batting average we fitted four different regression models:
+The models are fitted using AIC, BIC and trial and error. After fitting each models we checked the regression assumptions and R squared of each models separately, the final models are briefly as follow:
+
+- Model to predict Team Wins
+
+```{r}
+#Model to predict Team Wins
+diagnostics(model_Win, testit = FALSE, pcol = "darkgreen", lcol = "black")
+```
+
+```{r}
+summary(model_Win)
+```
+
+- Model to predict Runs Scored
+
+```{r}
+#Model to predict Runs Scored
+diagnostics(model_RS, testit = FALSE, pcol = "red", lcol = "black")
+```
+
+```{r}
+summary(model_RS)
+```
+
+- Model to predict Runs Allowed
+
+```{r}
+#Model to predict Runs Allowed
+diagnostics(model_RA, testit = FALSE, pcol = "blue", lcol = "black")
+```
+
+```{r}
+summary(model_RA)
+```
+
+- Model to predict batting average
+
+```{r}
+#Model to predict batting average
+diagnostics(adj_bic_mod, testit = FALSE, pcol = "purple", lcol = "black")
+```
+
+```{r}
+summary(adj_bic_mod)
+```
+
+
+# Citation of datasets
+
+- MLB Statistics from [Kaggle](https://storage.googleapis.com/kaggle-datasets/3217/5288/moneyball.zip?GoogleAccessId=web-data@kaggle-161607.iam.gserviceaccount.com&Expires=1563747603&Signature=DO8hFyuXm7aKSx4kLJuPnUIrXF%2BfBV0aetq9GyzgUrr1ztkvAV9VI84Mb%2BUnGasSyGu1gAA5pbaYHFh8GOadOGIPtCmJo%2FMQZU3P83etDy%2BSaYNmBlIEWf%2FEpFFezLichrBm6NjAv5HF0HVkWEdN3%2BkcmfIkgbYNIcvrY5OKpc1hS9OaB9jR9ggFGJ7MRJg5%2FJEEYgkrs58gDAsP633mrTp6Gmuv6e%2B1vlI29XvAGDkXK9q3fxDudfiyYf23RljfyukrVRmXliSbfuVTzXbl3qxd5KsqZMe7SI4aD67Kg5jzZqFA8x4ywOMk1y7OhKJqtQmWwB859sVa5VxH5Q2b1A%3D%3D)
+
+- Lahman Baseball Database [Duke](http://people.duke.edu/~rnau/BaseballBattingStats1960-2004--larger_data_file_with_more_variables.xlsx)
+
+
+
