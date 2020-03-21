@@ -3,6 +3,8 @@ Sports Analytics for Predicting Baseball Teams and Players Performance.
 
 This project is a statistical investigation to analyze and predict performance of a sport team and players. The project is submitted as a group project for STAT 420 Statistical Modeling in R course at UIUC.
 
+-Please see the Web for more details.
+
 # Web
 
 https://sheikhbahman.github.io/Sports-Analytics/
